@@ -1,0 +1,114 @@
+# Amends the dist-generated formula with `caveats` and `service` blocks.
+#
+# Why this exists: cargo-dist 0.31's Homebrew installer doesn't expose
+# hooks for `def caveats` or `service do`. Both are critical UX surfaces
+# — caveats tells brew users how to start the dashboard after install,
+# and the service block enables `brew services start tokenscale-cli` for
+# auto-start on login.
+#
+# Strategy: every time dist publishes a new formula version to this tap,
+# this workflow fires, splices the two blocks in before the closing
+# `end` of the class, and commits the amended formula.
+#
+# Idempotency: sentinel markers (`BEGIN-tokenscale-amendment` /
+# `END-tokenscale-amendment`) bracket the injected region. The script
+# strips any prior amendment before re-injecting, so re-runs (and runs
+# triggered by our own commits) are safe — they just no-op when the
+# content is already correct.
+
+name: amend-formula
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Formula/tokenscale-cli.rb'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  amend:
+    runs-on: ubuntu-latest
+    # Skip when our own amend commit triggered the workflow — otherwise
+    # we'd loop. (Idempotency would catch it anyway via the "no diff"
+    # guard below, but skipping early saves a CI minute.)
+    if: "!contains(github.event.head_commit.message, 'chore(formula): amend')"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Splice caveats + service blocks
+        run: |
+          set -euo pipefail
+          FORMULA=Formula/tokenscale-cli.rb
+          python3 <<'PY'
+          import pathlib
+          import re
+
+          formula_path = pathlib.Path("Formula/tokenscale-cli.rb")
+          src = formula_path.read_text()
+
+          # Strip any prior amendment so the splice stays idempotent.
+          src = re.sub(
+              r"\n\s*# BEGIN-tokenscale-amendment.*?# END-tokenscale-amendment\n",
+              "\n",
+              src,
+              flags=re.DOTALL,
+          )
+
+          amendment = """
+            # BEGIN-tokenscale-amendment — see .github/workflows/amend-formula.yml
+            def caveats
+              <<~EOS
+                tokenscale is installed. To start the local dashboard:
+
+                  tokenscale serve
+
+                That binds http://127.0.0.1:8787 and runs the auto-scan loop.
+
+                To run it as a background service (auto-starts on login):
+
+                  brew services start tokenscale-cli
+
+                Then open: http://127.0.0.1:8787
+
+                Config (created on first run):
+                  ~/Library/Application Support/tokenscale/config.toml   (macOS)
+                  ~/.config/tokenscale/config.toml                       (Linux)
+
+                Service log (when running under brew services):
+                  #{var}/log/tokenscale.log
+              EOS
+            end
+
+            service do
+              run [opt_bin/"tokenscale", "serve"]
+              keep_alive true
+              working_dir HOMEBREW_PREFIX
+              log_path var/"log/tokenscale.log"
+              error_log_path var/"log/tokenscale.log"
+            end
+            # END-tokenscale-amendment
+          """
+
+          # Splice before the final `end` (closes the Formula class).
+          new = re.sub(r"(\nend\s*\Z)", amendment + r"\1", src, count=1)
+          if new == src:
+              raise SystemExit("Failed to find final `end` to splice before")
+
+          formula_path.write_text(new)
+          PY
+
+      - name: Commit amendment if changed
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- Formula/tokenscale-cli.rb; then
+            echo "Formula already amended — no changes to commit."
+            exit 0
+          fi
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/tokenscale-cli.rb
+          git commit -m "chore(formula): amend with caveats + service block"
+          git push
