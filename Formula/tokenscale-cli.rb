@@ -1,25 +1,25 @@
 class TokenscaleCli < Formula
   desc "Command-line entrypoint for the tokenscale dashboard."
   homepage "https://github.com/RobarePruyn/tokenscale"
-  version "0.1.2"
+  version "0.1.3"
   if OS.mac?
     if Hardware::CPU.arm?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.2/tokenscale-cli-aarch64-apple-darwin.tar.xz"
-      sha256 "ecc5b98f1ebc7917ec0ff339f2ad6c6e70be6e8065eff5f3273e7f948c9f3cf8"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.3/tokenscale-cli-aarch64-apple-darwin.tar.xz"
+      sha256 "2275075f011b86f0cc65cedb8badb46c4828f387cd2b5f820c215e01f9c7dadb"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.2/tokenscale-cli-x86_64-apple-darwin.tar.xz"
-      sha256 "7e4754bc8af0b58729c51f6a0ce43d296d9abc7267ef8603092b7ab21b981958"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.3/tokenscale-cli-x86_64-apple-darwin.tar.xz"
+      sha256 "7eff69f2add74b21e9ef587f7d6f3de08c1e2275b374956eec4f2ed1a9e8f729"
     end
   end
   if OS.linux?
     if Hardware::CPU.arm?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.2/tokenscale-cli-aarch64-unknown-linux-gnu.tar.xz"
-      sha256 "a802b9e27f4901bcc684d472021b2d102a2b12d69647b57b158ff94149b5ecd9"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.3/tokenscale-cli-aarch64-unknown-linux-gnu.tar.xz"
+      sha256 "f7d46555a3fdb4866a3e6e4b398c235dfebbe93d9e23858b780570339e5ec628"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.2/tokenscale-cli-x86_64-unknown-linux-gnu.tar.xz"
-      sha256 "6d73bd11087ee316eaa0d087336ebabcb5ded31e04b5e9dc0771bb1c6cc351a3"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.3/tokenscale-cli-x86_64-unknown-linux-gnu.tar.xz"
+      sha256 "238a3c5b1d55184ce489128b1a9bfab11640d9f1f2ecf5ac64093cecdc917791"
     end
   end
   license "Apache-2.0"
