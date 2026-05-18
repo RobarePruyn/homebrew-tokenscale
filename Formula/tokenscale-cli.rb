@@ -1,25 +1,25 @@
 class TokenscaleCli < Formula
   desc "Command-line entrypoint for the tokenscale dashboard."
   homepage "https://github.com/RobarePruyn/tokenscale"
-  version "0.1.10"
+  version "0.1.11"
   if OS.mac?
     if Hardware::CPU.arm?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.10/tokenscale-cli-aarch64-apple-darwin.tar.xz"
-      sha256 "0e245042f220fb751b1bc07dff7f94c60ecc90b10bd43abf5eee71cd64b58bdf"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.11/tokenscale-cli-aarch64-apple-darwin.tar.xz"
+      sha256 "f9a67a43282538c485d40f8d9b0173f6e93746f7bb4022d4e8a47f5280091f5e"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.10/tokenscale-cli-x86_64-apple-darwin.tar.xz"
-      sha256 "da0a93a20befc80096b28f1928cbe64c64a11269068a36fde1f9b04b598c7815"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.11/tokenscale-cli-x86_64-apple-darwin.tar.xz"
+      sha256 "e8853dd5665700e4914c1e40a9d7e65d618852c0dae58a38360080ca01233ec2"
     end
   end
   if OS.linux?
     if Hardware::CPU.arm?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.10/tokenscale-cli-aarch64-unknown-linux-gnu.tar.xz"
-      sha256 "323f98225b3e386df420d0ab0662724216e513d1410ba920c0149e1fc07873bb"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.11/tokenscale-cli-aarch64-unknown-linux-gnu.tar.xz"
+      sha256 "3acd174e84c6c412aad7d969552cf439ac5e3a756474aef807abf0c91249e4b5"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.10/tokenscale-cli-x86_64-unknown-linux-gnu.tar.xz"
-      sha256 "545acc6ec2c6166996863d2ada94f8db25573b2e6fc0aff908b49234dde4ed8a"
+      url "https://github.com/RobarePruyn/tokenscale/releases/download/v0.1.11/tokenscale-cli-x86_64-unknown-linux-gnu.tar.xz"
+      sha256 "287b16d1bed58a9c8773de0a0c5109abbef1725b469f62426726264ab5441cf5"
     end
   end
   license "Apache-2.0"
@@ -63,37 +63,4 @@ class TokenscaleCli < Formula
     # sample files.
     pkgshare.install(*leftover_contents) unless leftover_contents.empty?
   end
-  # BEGIN-tokenscale-amendment — see .github/workflows/amend-formula.yml
-  def caveats
-    <<~EOS
-      tokenscale is installed. To start the local dashboard:
-
-        tokenscale serve
-
-      That binds http://127.0.0.1:8787 and runs the auto-scan loop.
-
-      To run it as a background service (auto-starts on login):
-
-        brew services start tokenscale-cli
-
-      Then open: http://127.0.0.1:8787
-
-      Config (created on first run):
-        ~/Library/Application Support/tokenscale/config.toml   (macOS)
-        ~/.config/tokenscale/config.toml                       (Linux)
-
-      Service log (when running under brew services):
-        #{var}/log/tokenscale.log
-    EOS
-  end
-
-  service do
-    run [opt_bin/"tokenscale", "serve"]
-    keep_alive true
-    working_dir HOMEBREW_PREFIX
-    log_path var/"log/tokenscale.log"
-    error_log_path var/"log/tokenscale.log"
-  end
-  # END-tokenscale-amendment
-
 end
