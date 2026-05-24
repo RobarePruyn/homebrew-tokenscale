@@ -63,4 +63,37 @@ class TokenscaleCli < Formula
     # sample files.
     pkgshare.install(*leftover_contents) unless leftover_contents.empty?
   end
+  # BEGIN-tokenscale-amendment — see .github/workflows/amend-formula.yml
+  def caveats
+    <<~EOS
+      tokenscale is installed. To start the local dashboard:
+
+        tokenscale serve
+
+      That binds http://127.0.0.1:8787 and runs the auto-scan loop.
+
+      To run it as a background service (auto-starts on login):
+
+        brew services start tokenscale-cli
+
+      Then open: http://127.0.0.1:8787
+
+      Config (created on first run):
+        ~/Library/Application Support/tokenscale/config.toml   (macOS)
+        ~/.config/tokenscale/config.toml                       (Linux)
+
+      Service log (when running under brew services):
+        #{var}/log/tokenscale.log
+    EOS
+  end
+
+  service do
+    run [opt_bin/"tokenscale", "serve"]
+    keep_alive true
+    working_dir HOMEBREW_PREFIX
+    log_path var/"log/tokenscale.log"
+    error_log_path var/"log/tokenscale.log"
+  end
+  # END-tokenscale-amendment
+
 end
