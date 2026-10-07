@@ -63,33 +63,43 @@ class TokenscaleCli < Formula
     # sample files.
     pkgshare.install(*leftover_contents) unless leftover_contents.empty?
   end
+
   # BEGIN-tokenscale-amendment — see .github/workflows/amend-formula.yml
   def caveats
     <<~EOS
-      tokenscale is installed. To start the local dashboard:
+      tokenscale is installed. It is designed to run on demand:
 
-        tokenscale serve
+        tokenscale serve        # dashboard at http://127.0.0.1:8787; scans on startup and every minute while running
 
-      That binds http://127.0.0.1:8787 and runs the auto-scan loop.
+      Stop it with Ctrl-C when you are done. Nothing runs at login unless you opt in.
 
-      To run it as a background service (auto-starts on login):
+      Optional background service (opt in):
 
         brew services start tokenscale-cli
 
-      Then open: http://127.0.0.1:8787
+      The service restarts only after a crash, at most once per 5 minutes. A
+      deliberate refusal (exit code 3: the database was migrated by a newer
+      tokenscale) does not restart; the fix is `brew upgrade tokenscale-cli`.
 
       Config (created on first run):
         ~/Library/Application Support/tokenscale/config.toml   (macOS)
         ~/.config/tokenscale/config.toml                       (Linux)
 
-      Service log (when running under brew services):
+      Service log (only when running under brew services; WARN level and above):
         #{var}/log/tokenscale.log
     EOS
   end
 
   service do
     run [opt_bin/"tokenscale", "serve"]
-    keep_alive true
+    # Restart only after a crash (signal exit), never after a deliberate
+    # non-zero exit such as the schema-newer-than-binary refusal (code 3),
+    # and never more often than every 5 minutes. Incident 2026-10-07:
+    # keep_alive true hot-looped a stale binary 41,095 times and grew a
+    # 529 MB log.
+    keep_alive crashed: true
+    throttle_interval 300
+    environment_variables RUST_LOG: "warn"
     working_dir HOMEBREW_PREFIX
     log_path var/"log/tokenscale.log"
     error_log_path var/"log/tokenscale.log"
